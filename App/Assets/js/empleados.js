@@ -4,6 +4,8 @@ import { validateData } from "./cases/utils.js";
 
 // Variable global para guardar los datos de los usuarios y poder re utilizarlos en caso de ser necesario.
 let getUsers;
+let getAreas;
+let getRoles;
 const tbodyEmpleados = document.querySelector("#tbodyEmpleados");
 const btnCrearEmpleado = document.querySelector("#btnCrearEmpleado");
 const closeBtnEditar = document.querySelector("#closeBtnEditar");
@@ -11,6 +13,17 @@ const closeBtnCrear = document.querySelector("#closeBtnCrear");
 const modalCrear = document.querySelector("#modalCrear");
 const modalEditar = document.querySelector("#modalEditar");
 const modalFormEdit = document.querySelector('#formEditar');
+// const modalFormCrear = document.querySelector('#modalCrear #formCrear');
+const modalFormCrear = document.querySelector('#formCrear');
+
+// Selectores para renderizar los roles según el modal
+const rolesEditar = document.querySelector('#modalEditar .roles');
+const areasCrear = document.querySelector('#modalCrear .roles');
+const rolesCrear = document.querySelector('#modalCrear .roles');
+const areasEditar = document.querySelector('#modalEditar .roles');
+
+
+
 // Checkbox de los roles del modal de edición.
 // Objeto del formulario editar para validar que elementos son obligatorios y cuales no.
 const inputsFormEdit = {
@@ -25,13 +38,10 @@ const inputsFormEdit = {
 
 const renderEmpleados = (getUsers = {}) => {
   if (!getUsers) {
-    console.warn("no hay registros");
     return;
   }
   const data = getUsers.data;
-  console.log(data);
   const fragment = document.createDocumentFragment();
-  // console.log(tbodyEmpleados);
   tbodyEmpleados.innerHTML = "";
   data.forEach((user) => {
     let btnModificar = document.createElement("button");
@@ -73,12 +83,11 @@ const renderEmpleados = (getUsers = {}) => {
 
   tbodyEmpleados.append(fragment);
 };
-const renderAreas = (getAreas = {}) => {
+const renderAreas = (getAreas = {}, selector) => {
   if (!getAreas) {
-    console.log("no hay registros");
     return;
   }
-  const inputAreaId = document.querySelector("#inputAreaId");
+  const inputAreaId = document.querySelector(selector);
   const data = getAreas.data;
   const message = getAreas.message;
   const frgment = document.createDocumentFragment();
@@ -88,7 +97,7 @@ const renderAreas = (getAreas = {}) => {
   defaultOption.disabled = true;
   defaultOption.selected = true;
   frgment.appendChild(defaultOption);
-
+  inputAreaId.innerHTML = "";
   data.forEach((ar) => {
     let option = document.createElement("option");
     option.setAttribute("class", "areaOption");
@@ -98,14 +107,14 @@ const renderAreas = (getAreas = {}) => {
   });
   inputAreaId.appendChild(frgment);
 };
-const renderRoles = (getRoles = {}) => {
+const renderRoles = (getRoles = {}, selector) => {
   if (!getRoles) {
-    console.log("no hay registros");
     return;
   }
   const data = getRoles.data;
   const frgment = document.createDocumentFragment();
-  const roles = document.querySelector(".roles");
+  const roles = document.querySelector(selector);
+  roles.innerHTML = "";
   data.forEach((rl) => {
     let div = document.createElement("div");
     let checkbox = document.createElement("input");
@@ -126,7 +135,6 @@ const renderRoles = (getRoles = {}) => {
 let rolesAgregados = [];
 const addRol = (idRol, isAdd = false)=>{
     if (!idRol) {
-        console.warn('rol no definido para agregar');
         return;
     }
     if (isAdd) {
@@ -135,37 +143,57 @@ const addRol = (idRol, isAdd = false)=>{
             rolesAgregados.push(idRol);
             
         }
-        console.log({"rolesPush": rolesAgregados});
     }else{
         // Aplicar filter.
         rolesAgregados = rolesAgregados.filter((rl)=> idRol != rl);
-        console.log({"rolesFilter": rolesAgregados});
     }
 
-    console.log(rolesAgregados);
 
 }
 
-btnCrearEmpleado.addEventListener("click", (f) => {
+// Abrir modal 
+btnCrearEmpleado.addEventListener("click",  (f) => {
   f.stopPropagation();
   f.preventDefault();
-  console.log(f.target);
-
   modalCrear.style.display = "flex";
+  renderRoles(getRoles, "#modalCrear .roles");
+  renderAreas(getAreas, "#modalCrear #inputAreaId");
+
+  
+const checkBoxCrear = document.querySelectorAll('#modalCrear .checkboxClass');
+console.log(checkBoxCrear);
+// Evento del checkbox del formulario crear
+checkBoxCrear.forEach((e)=>{
+  e.addEventListener('change', (f)=>{
+    f.stopPropagation();
+    console.log(f.target);
+    if (f.target.checked) {
+      addRol(f.target.value, true);
+    }else{
+      addRol(f.target.value, false);
+    }
+  });
 });
+
+
+});
+
+
+
 
 closeBtnCrear.addEventListener("click", (e) => {
-  console.log(e.target);
   e.stopPropagation();
   modalCrear.style.display = "none";
+  rolesAgregados.length = 0;
 });
+
+
 
 closeBtnEditar.addEventListener("click", (e) => {
   e.stopPropagation();
   modalEditar.style.display = "none";
 //   Limpio el arreglo cada vez que se cierre el modal.
   rolesAgregados.length = 0;
-  console.log(rolesAgregados);
 });
 
 tbodyEmpleados.addEventListener("click", (event) => {
@@ -173,6 +201,8 @@ tbodyEmpleados.addEventListener("click", (event) => {
     event.target.tagName === "BUTTON" &&
     event.target.classList.contains("btnModificar")
   ) {
+    renderRoles(getRoles, "#modalEditar .roles");
+    renderAreas(getAreas, "#modalEditar #inputAreaId");
     let idUsuario = parseInt(event.target.getAttribute("data-id"));
     let dataUsers = getUsers.data;
     let dataEmpleado = dataUsers.find((user) => user.idEmpleado === idUsuario);
@@ -219,6 +249,7 @@ tbodyEmpleados.addEventListener("click", (event) => {
         }
       }
 
+
       check.addEventListener("change", (f) => {
         f.stopPropagation();
         let value = f.target.value;
@@ -237,6 +268,7 @@ tbodyEmpleados.addEventListener("click", (event) => {
     inputEmail.value = dataEmpleado.email;
     inputDescripcion.value = dataEmpleado.descripcion;
     idEmpleado.value = dataEmpleado.idEmpleado;
+    
 
     // mostrar modal
     modalEditar.style.display = "flex";
@@ -289,6 +321,76 @@ modalFormEdit.addEventListener('submit',async  (e) => {
 
 });
 
+// Mapeo del formulario
+const camposFormulario = {
+  idEmpleado: "ID del Empleado",
+  nombre: "Nombre Completo",
+  email: "Correo Electrónico",
+  genero: "Sexo",
+  area_id: "Área",
+  descripcion: "Descripción de la Experiencia",
+  boletin: "Desea Recibir Boletín Informativo"
+
+};
+
+modalFormCrear.addEventListener('submit', async (g)=>{
+  g.preventDefault();
+  g.stopPropagation();
+  let dataSubmit = new FormData(g.target);
+  let data = Object.fromEntries(dataSubmit);
+
+  if(!validateData(dataSubmit,"boletin",camposFormulario)) return;
+
+  // Validar si se selecciono el genero.
+  const generoSeleccionado = document.querySelector('input[name="genero"]:checked');
+
+  if (!generoSeleccionado) {
+    alert('El genero es obligatorio');
+    return;
+  }
+
+  if (rolesAgregados.length === 0) {
+    alert("El rol debe ser obligatorio");
+    return;
+  }
+
+  if (!validateNombre(data.nombre)) {
+    alert("Valor digitado del nombre incorrecto");
+    return;
+  }
+
+  if (!validateEmail(data.email)) {
+    alert("Correo digitado incorrectamente");
+    return;
+  }
+
+  data = {
+    ...data,
+    rolesAgregados
+  }
+
+  delete data.idRol;
+
+  const responseAdd = await sendData("App/Modules/Empleados/Controller/EmpleadosController.php", "POST", 'addEmpleado', data);
+
+  if(!responseAdd.status) {
+    alert(responseAdd.message);
+    return;
+  }
+
+  alert(responseAdd.message);
+  getUsers = await getData(
+    "App/Modules/Empleados/Controller/EmpleadosController.php",
+    "GET",
+    { action: "getEmpleados" }
+  );
+  renderEmpleados(getUsers);
+  modalCrear.style.display = "none";
+
+
+});
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   // petición fetch
   getUsers = await getData(
@@ -297,16 +399,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     { action: "getEmpleados" }
   );
   renderEmpleados(getUsers);
-  const getAreas = await getData(
+   getAreas = await getData(
     "App/Modules/Empleados/Controller/EmpleadosController.php",
     "GET",
     { action: "getAreas" }
   );
-  renderAreas(getAreas);
-  const getRoles = await getData(
+  // renderAreas(getAreas);
+   getRoles = await getData(
     "App/Modules/Empleados/Controller/EmpleadosController.php",
     "GET",
     { action: "getRoles" }
   );
-  renderRoles(getRoles);
+  // renderRoles(getRoles);
 });

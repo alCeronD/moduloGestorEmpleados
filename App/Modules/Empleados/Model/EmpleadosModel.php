@@ -167,17 +167,26 @@ class EmpleadosModel{
 
     public function addEmpleado(array $empleado = []){
         try {
+
+            $this->conn->begin_transaction();
             if (count($empleado) === 0) {
                 throw new Exception("Datos del empleado no recibidos no recibidos correctamente.");
             }
 
-            extract($empleado,EXTR_PREFIX_SAME, 'eml_' );
+            $eml_nombre = $empleado['nombre'];
+            $eml_email = $empleado['email'];
+            $eml_sexo = $empleado['genero'];
+            $eml_areaId = $empleado['area_id'];
+            $eml_boletin = (!isset($empleado['boletin'])) ? 0 :1;
+            $eml_descripcion = $empleado['descripcion'];
+
 
             $sql = "INSERT INTO empleados (`nombre`, `email`, `sexo`, `area_id`, `boletin`, `descripcion`) VALUES (?, ?, ?, ?, ?, ?)";
 
             $stmt = $this->conn->prepare($sql);
 
             if (!$stmt) {
+                $this->conn->rollback();
                 throw new Exception("Error al preparar la consulta".$this->conn->error);
             }
 
@@ -187,13 +196,31 @@ class EmpleadosModel{
                 throw new Exception("Error al ejecutar proceso".$stmt->error);
             }
 
+            // Segundo proceso
+            $idEmpleado = $this->conn->insert_id;
+                if (isset($empleado['rolesAgregados']) && is_array($empleado['rolesAgregados'])) {
+                $stmtRol = $this->conn->prepare("
+                    INSERT INTO empleado_rol (empleadoId, rol_id)
+                    VALUES (?, ?)
+                ");
+
+                foreach ($empleado['rolesAgregados'] as $rolId) {
+                    $stmtRol->bind_param("ii", $idEmpleado, $rolId);
+
+                    if (!$stmtRol->execute()) {
+                        throw new Exception("Error al insertar rol ($rolId): " . $stmtRol->error);
+                    }
+                }
+                $stmtRol->close();
+            }
+
+            $this->conn->commit();
+
+
             return [
                 'status'=> true,
                 'message' => "empleado agregado correctamente"
             ];
-
-
-
 
         } catch (Exception $e) {
             return [
@@ -202,6 +229,8 @@ class EmpleadosModel{
             ];
         }
     }
+
+
 
     /**
      * Función para actualizar datos del usuario

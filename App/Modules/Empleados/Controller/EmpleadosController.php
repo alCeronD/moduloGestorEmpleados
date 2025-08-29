@@ -83,14 +83,30 @@ class EmpleadosController{
                 throw new NoDataException("Datos vacios.", 1);
             }
 
+            $roles = $dataEmpleado['rolesAgregados'];
+
             // Validar que los datos obligatorios tengan información.
+            if (count($roles) === 0) throw new NoDataException("El rol del empleado debe ser obligatorio", 1);
+            if(!$this->regex::validarEmailNative($dataEmpleado['email'])) throw new NoDataException("Correo no válido");
+            if(!$this->regex::validarLetras($dataEmpleado['nombre'])) throw new NoDataException("Nombre digitado no valido");
+            if(empty($dataEmpleado['descripcion'])) throw new NoDataException("La descripción es obligatoria");
+            if(empty($dataEmpleado['area_id'])) throw new NoDataException("El area del empleado es obligatoria");
+            if(empty($dataEmpleado['genero'])) throw new NoDataException("El genero del empleado es obligatorio");
 
+            $dataEmpleado['area_id'] = (int) $dataEmpleado['area_id'];
+            // Vacio los roles enviados para transformarlos a enteros
+            $dataEmpleado['rolesAgregados'] = [];
 
+            // Transformo los roles en enteros.
+            foreach ($roles as  $value) {
+                $dataEmpleado['rolesAgregados'][] = (int) $value;
+            }
 
-            // $dataResult = $this->empleadosModel->addEmpleado($dataEmpleado);
+            $dataResult = $this->empleadosModel->addEmpleado($dataEmpleado);
+            $this->instanceConn->closeConnect();
 
-            // 201 = Recurso creado correctamente.
-            // $this->response::success($dataResult, 201);
+            // // 201 = Recurso creado correctamente.
+            $this->response::success($dataResult, 201);
 
         } catch (NoDataException $th) {
             $result = [
@@ -156,6 +172,7 @@ class EmpleadosController{
 
         }
     }
+
 }
 $obj = new EmpleadosController();
 // Recibe la data desde la petición javascript.
@@ -165,17 +182,22 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         switch ($data['action']) {
-            case 'add':
-                # code...
+            case 'addEmpleado':
+
+                unset($data['action']);
+                if (method_exists($obj, 'executeAddEmpleado')) {
+                    $obj->executeAddEmpleado($data);
+                }
+
                 break;
 
-                case 'updateEmpleado':
-                    unset($data['action']);
-                    if (method_exists($obj, 'executeUpdateEmpleado')) {
-                        $obj->executeUpdateEmpleado($data);
-                    }
-                    break;
-            
+            case 'updateEmpleado':
+                unset($data['action']);
+                if (method_exists($obj, 'executeUpdateEmpleado')) {
+                    $obj->executeUpdateEmpleado($data);
+                }
+                break;
+
             default:
                 # code...
                 break;

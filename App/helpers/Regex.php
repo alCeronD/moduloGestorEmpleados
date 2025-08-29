@@ -29,7 +29,8 @@ class Regex{
     }
 
     public static function validarEmailNative($value){
-    return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+        // if(empty($value)) return (bool) true;
+        return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
 }
 
