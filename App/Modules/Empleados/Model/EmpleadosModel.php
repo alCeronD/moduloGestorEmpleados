@@ -1,6 +1,5 @@
 <?php
 
-use Dba\Connection;
 
 require_once __DIR__ . '/../../../Config/Conn.php';
 
@@ -328,4 +327,12 @@ class EmpleadosModel
             ];
         }
     }
+
+    // public function deleteEmpleado (int $idEmpleado = 0){
+    //     try {
+    //         $sql = "DELETE FROM empleados WHERE id"
+    //     } catch (\Throwable $e) {
+
+    //     }
+    // }
 }
