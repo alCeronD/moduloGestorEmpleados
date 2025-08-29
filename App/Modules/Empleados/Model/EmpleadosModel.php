@@ -1,20 +1,22 @@
-<?php 
+<?php
 
 use Dba\Connection;
 
 require_once __DIR__ . '/../../../Config/Conn.php';
 
-class EmpleadosModel{
+class EmpleadosModel
+{
     private mysqli $conn;
-
-    public function __construct(mysqli $conn) {
+    public function __construct(mysqli $conn)
+    {
         $this->conn = $conn;
     }
 
-    public function getEmpleados() {
-    try {
-        // ✅ Primera consulta SIN roles
-        $sql = "SELECT 
+    public function getEmpleados()
+    {
+        try {
+            // ✅ Primera consulta SIN roles
+            $sql = "SELECT 
                     em.idEmpleado AS idEmpleado,
                     em.nombre AS nombreEmpleado,
                     em.email AS email,
@@ -26,69 +28,68 @@ class EmpleadosModel{
                 FROM empleados em
                 LEFT JOIN area ar ON em.area_id = ar.idArea";
 
-        $stmt = $this->conn->prepare($sql);
+            $stmt = $this->conn->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception("Error al preparar consulta: " . $this->conn->error);
-        }
+            if (!$stmt) {
+                throw new Exception("Error al preparar consulta: " . $this->conn->error);
+            }
 
-        if (!$stmt->execute()) {
-            throw new Exception("Error al ejecutar consulta: " . $stmt->error);
-        }
+            if (!$stmt->execute()) {
+                throw new Exception("Error al ejecutar consulta: " . $stmt->error);
+            }
 
-        $result = $stmt->get_result();
-        $empleados = [];
+            $result = $stmt->get_result();
+            $empleados = [];
 
-        while ($row = $result->fetch_assoc()) {
-            $empleados[] = $row;
-        }
+            while ($row = $result->fetch_assoc()) {
+                $empleados[] = $row;
+            }
 
-        $result->free();
-        $stmt->close();
+            $result->free();
+            $stmt->close();
 
-        // ✅ Segunda consulta para obtener roles por cada empleado
-        $sql2 = "SELECT 
+            // ✅ Segunda consulta para obtener roles por cada empleado
+            $sql2 = "SELECT 
                     r.idRol AS idRol,
                     r.nombre AS nombreRol
                 FROM roles r
                 INNER JOIN empleado_rol emr ON emr.rol_id = r.idRol
                 WHERE emr.empleadoId = ?";
 
-        $stmt2 = $this->conn->prepare($sql2);
+            $stmt2 = $this->conn->prepare($sql2);
 
-        if (!$stmt2) {
-            throw new Exception("Error al preparar consulta de roles: " . $this->conn->error);
-        }
-
-        foreach ($empleados as $key => $empleado) {
-            $idEmpleado = $empleado['idEmpleado'];
-            $stmt2->bind_param("i", $idEmpleado);
-            $stmt2->execute();
-            $resRoles = $stmt2->get_result();
-
-            $roles = [];
-            while ($rol = $resRoles->fetch_assoc()) {
-                $roles[] = $rol;
+            if (!$stmt2) {
+                throw new Exception("Error al preparar consulta de roles: " . $this->conn->error);
             }
 
-            $resRoles->free();
-            $empleados[$key]['rolesAsociados'] = $roles;
+            foreach ($empleados as $key => $empleado) {
+                $idEmpleado = $empleado['idEmpleado'];
+                $stmt2->bind_param("i", $idEmpleado);
+                $stmt2->execute();
+                $resRoles = $stmt2->get_result();
+
+                $roles = [];
+                while ($rol = $resRoles->fetch_assoc()) {
+                    $roles[] = $rol;
+                }
+
+                $resRoles->free();
+                $empleados[$key]['rolesAsociados'] = $roles;
+            }
+
+            $stmt2->close();
+
+            return [
+                'data' => $empleados,
+                'message' => count($empleados) == 0 ? "No hay empleados registrados" : "Empleados registrados",
+                'status' => true
+            ];
+        } catch (Exception $th) {
+            return [
+                'status' => false,
+                'message' => $th->getMessage()
+            ];
         }
-
-        $stmt2->close();
-
-        return [
-            'data' => $empleados,
-            'message' => count($empleados) == 0 ? "No hay empleados registrados" : "Empleados registrados",
-            'status' => true
-        ];
-
-    } catch (Exception $th) {
-        return [
-            'status' => false,
-            'message' => $th->getMessage()
-        ];
-    }
     }
 
     public function getAreas()
@@ -129,43 +130,50 @@ class EmpleadosModel{
     }
 
     public function getRoles()
-{
-    try {
-        $sql = "SELECT 
+    {
+        try {
+            $sql = "SELECT 
                     r.idRol AS idRol,
                     r.nombre AS nombreRol
                 FROM roles r";
 
-        $stmt = $this->conn->prepare($sql);
+            $stmt = $this->conn->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception("Error al preparar la consulta: " . $this->conn->error);
+            if (!$stmt) {
+                throw new Exception("Error al preparar la consulta: " . $this->conn->error);
+            }
+
+            if (!$stmt->execute()) {
+                throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
+            }
+
+            $roles = [];
+            $dataResult = $stmt->get_result();
+            while ($row = $dataResult->fetch_assoc()) {
+                $roles[] = $row;
+            }
+
+            return [
+                'data' => count($roles) === 0 ? [] : $roles,
+                'message' => count($roles) === 0 ? "No hay roles registrados" : "Roles registrados",
+                'status' => true
+            ];
+        } catch (Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
-        }
-
-        $roles = [];
-        $dataResult = $stmt->get_result();
-        while ($row = $dataResult->fetch_assoc()) {
-            $roles[] = $row;
-        }
-
-        return [
-            'data' => count($roles) === 0 ? [] : $roles,
-            'message' => count($roles) === 0 ? "No hay roles registrados" : "Roles registrados",
-            'status' => true
-        ];
-    } catch (Exception $e) {
-        return [
-            'status' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
 
-    public function addEmpleado(array $empleado = []){
+    /**
+     * Función para crear un nuevo empleado en la base de datos, se envia un arreglo desde el controlador, se devuelven mensajes de excepciones y respuesta al controlador.
+     * @param array $empleado
+     * @throws \Exception
+     * @return array{message: string, status: bool}
+     */
+    public function addEmpleado(array $empleado = [])
+    {
         try {
 
             $this->conn->begin_transaction();
@@ -177,7 +185,7 @@ class EmpleadosModel{
             $eml_email = $empleado['email'];
             $eml_sexo = $empleado['genero'];
             $eml_areaId = $empleado['area_id'];
-            $eml_boletin = (!isset($empleado['boletin'])) ? 0 :1;
+            $eml_boletin = (!isset($empleado['boletin'])) ? 0 : 1;
             $eml_descripcion = $empleado['descripcion'];
 
 
@@ -187,18 +195,18 @@ class EmpleadosModel{
 
             if (!$stmt) {
                 $this->conn->rollback();
-                throw new Exception("Error al preparar la consulta".$this->conn->error);
+                throw new Exception("Error al preparar la consulta" . $this->conn->error);
             }
 
-            $stmt->bind_param('sssiis',$eml_nombre, $eml_email, $eml_sexo, $eml_areaId, $eml_boletin, $eml_descripcion );
+            $stmt->bind_param('sssiis', $eml_nombre, $eml_email, $eml_sexo, $eml_areaId, $eml_boletin, $eml_descripcion);
 
             if (!$stmt->execute()) {
-                throw new Exception("Error al ejecutar proceso".$stmt->error);
+                throw new Exception("Error al ejecutar proceso" . $stmt->error);
             }
 
             // Segundo proceso
             $idEmpleado = $this->conn->insert_id;
-                if (isset($empleado['rolesAgregados']) && is_array($empleado['rolesAgregados'])) {
+            if (isset($empleado['rolesAgregados']) && is_array($empleado['rolesAgregados'])) {
                 $stmtRol = $this->conn->prepare("
                     INSERT INTO empleado_rol (empleadoId, rol_id)
                     VALUES (?, ?)
@@ -218,43 +226,41 @@ class EmpleadosModel{
 
 
             return [
-                'status'=> true,
+                'status' => true,
                 'message' => "empleado agregado correctamente"
             ];
-
         } catch (Exception $e) {
             return [
-                'status'=>false,
-                'message'=> $e->getMessage()
+                'status' => false,
+                'message' => $e->getMessage()
             ];
         }
     }
-
-
 
     /**
      * Función para actualizar datos del usuario
      * @param array $empleado
      * @return array{message: string, status: bool}
      */
-    public function updateEmpleado(array $empleado = []){
+    public function updateEmpleado(array $empleado = [])
+    {
 
         try {
             $this->conn->begin_transaction();
             // 1 transacción - Extraigo los roles asociados al usuario en base al id del empleado
             $sql = "SELECT empleadoId AS idEmpleado, rol_id AS rolAsociado FROM empleado_rol WHERE empleadoId = ?";
             $stmt1 = $this->conn->prepare($sql);
-            if(!$stmt1) return [ 'status'=> false, 'message'=> "error al preparar la consulta".$this->conn->error];
+            if (!$stmt1) return ['status' => false, 'message' => "error al preparar la consulta" . $this->conn->error];
             $stmt1->bind_param('i', $empleado['idEmpleado']);
-            if(!$stmt1->execute()){
+            if (!$stmt1->execute()) {
                 $this->conn->rollback();
-                return ['status'=> false, 'message'=> "error al ejecutar la consulta".$stmt1->error];
+                return ['status' => false, 'message' => "error al ejecutar la consulta" . $stmt1->error];
             }
             $roles = [];
             $result = $stmt1->get_result();
 
-            while($row = $result->fetch_assoc()){
-                $roles []= $row;
+            while ($row = $result->fetch_assoc()) {
+                $roles[] = $row;
             }
             $result->free();
             $stmt1->close();
@@ -262,31 +268,31 @@ class EmpleadosModel{
             //2 Transaccion - ELIMINAR LOS ROLES DE LA BASE DE DATOS E INSERTAR LOS NUEVOS.
             $sql2 = "DELETE FROM empleado_rol WHERE empleadoId = ?";
             $stmt2 = $this->conn->prepare($sql2);
-            if(!$stmt2) return [ 'status'=> false, 'message'=> "error al preparar la consulta".$this->conn->error];
+            if (!$stmt2) return ['status' => false, 'message' => "error al preparar la consulta" . $this->conn->error];
 
             $stmt2->bind_param('i', $empleado['idEmpleado']);
-            
-            if(!$stmt2->execute()){
+
+            if (!$stmt2->execute()) {
                 $this->conn->rollback();
-                throw new Exception("Error al ejecutar la consulta de transacción".$stmt2->error);
-            } 
+                throw new Exception("Error al ejecutar la consulta de transacción" . $stmt2->error);
+            }
 
             $stmt2->close();
 
             // 3 Transaccion - Insertar los nuevos roles asociados;
             $sql3 = "INSERT INTO empleado_rol (empleadoId, rol_id) VALUES (?,?)";
             $stmt3 = $this->conn->prepare($sql3);
-            if(!$stmt3) return [ 'status'=> false, 'message'=> "error al preparar la consulta".$this->conn->error];
+            if (!$stmt3) return ['status' => false, 'message' => "error al preparar la consulta" . $this->conn->error];
 
             $rolesUsuario = $empleado["rolesAgregados"];
             foreach ($rolesUsuario as $value) {
 
                 $stmt3->bind_param('ii', $empleado['idEmpleado'], $value);
-                if(!$stmt3->execute()){
+                if (!$stmt3->execute()) {
                     $this->conn->rollback();
                     return [
-                        'status'=>false,
-                        'message'=> "Error al ejecutar el procedimiento".$stmt3->error
+                        'status' => false,
+                        'message' => "Error al ejecutar el procedimiento" . $stmt3->error
                     ];
                 }
             }
@@ -296,34 +302,30 @@ class EmpleadosModel{
             $sql4 = "UPDATE empleados SET nombre = ?, email = ?, sexo = ?, area_id =?, boletin = ?, descripcion = ? WHERE idEmpleado = ?";
 
             $stmt4 = $this->conn->prepare($sql4);
-            if(!$stmt4) return [ 'status'=> false, 'message'=> "error al preparar la consulta".$this->conn->error];
-            
-            $stmt4->bind_param('sssiisi', $empleado['nombre'], $empleado['email'], $empleado['genero'], $empleado['area_id'], $empleado['boletin'],$empleado['descripcion'], $empleado['idEmpleado']);
+            if (!$stmt4) return ['status' => false, 'message' => "error al preparar la consulta" . $this->conn->error];
+
+            $stmt4->bind_param('sssiisi', $empleado['nombre'], $empleado['email'], $empleado['genero'], $empleado['area_id'], $empleado['boletin'], $empleado['descripcion'], $empleado['idEmpleado']);
 
             if (!$stmt4->execute()) {
                 $this->conn->rollback();
                 return [
-                    'status'=> false,
-                    'message'=> 'error al ejecutar el proceso'.$stmt4->error
+                    'status' => false,
+                    'message' => 'error al ejecutar el proceso' . $stmt4->error
                 ];
             }
-            
+
             $this->conn->commit();
 
             return [
                 'message' => 'Datos del empleado actualizados',
-                'status'=> true
+                'status' => true
             ];
         } catch (\Throwable $e) {
             $this->conn->rollback();
             return [
-                'status'=>false,
-                'message'=> $e->getMessage()
+                'status' => false,
+                'message' => $e->getMessage()
             ];
         }
     }
 }
-
-
-
-?>

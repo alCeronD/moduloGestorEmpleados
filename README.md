@@ -15,41 +15,45 @@ Proceso de prueba nexus password
 
 ---
 
-## Estructura de carpetas del proyecto.
+## Estructura de carpetas del proyecto
 
-Directory structure:
-└── alcerond-modulogestorempleados/
+```text
+alcerond-modulogestorempleados/
 ├── README.md
-├── index.php - Archivo inicial
+├── index.php                         # Archivo inicial
 └── App/
-├── Assets/
-│ ├── css/
-│ │ └── main.css - Css general del modulo empleados
-│ └── js/
-│ ├── empleados.js - Archivo que contiene información logica de negocio
-│ └── cases/
-│ ├── fetch.js - Funciones para hacer peticiones post y get
-│ ├── regex.js - Funciones para validar expresiones regulares
-│ └── utils.js - Funciones logica de negocio para validaciones
-├── Config/
-│ ├── Config.php - constantes para conectar a la base de datos
-│ └── Conn.php - Clase para conectar a la base de datos
-├── DB/
-│ ├── DATA.SQL - Consultas insert de prueba
-│ └── SQUEMA.sql - Consultas de creación de tablas
-│ └── empleados.sql - Base de datos con información cargada.
-├── helpers/
-│ ├── Exception.php
-│ ├── Regex.php - Clase con funciones estaticas para validar datos
-│ └── Response.php - Función para devolver respuesta al cliente
-└── Modules/
-└── Empleados/
-├── Controller/
-│ └── EmpleadosController.php - Flujo central del modulo
-├── Model/
-│ └── EmpleadosModel.php - Consultas
-└── View/
-└── EmpleadosView.php - Vista del modulo empleados
+    ├── Assets/
+    │   ├── css/
+    │   │   └── main.css             # Css general del módulo empleados
+    │   └── js/
+    │       ├── empleados.js         # Lógica de negocio del módulo
+    │       └── cases/
+    │           ├── fetch.js         # Funciones para peticiones POST/GET
+    │           ├── regex.js         # Validaciones con expresiones regulares
+    │           └── utils.js         # Lógica de validaciones
+    ├── Config/
+    │   ├── Config.php               # Constantes de conexión a la BD
+    │   └── Conn.php                 # Clase de conexión a la BD
+    ├── DB/
+    │   ├── DATA.SQL                 # Datos de prueba
+    │   ├── SQUEMA.sql               # Estructura de tablas
+    │   └── empleados.sql            # Base con registros cargados
+    ├── helpers/
+    │   ├── Exception.php
+    │   ├── Regex.php                # Validación de datos
+    │   └── Response.php             # Manejo de respuestas al cliente
+    └── Modules/
+        └── Empleados/
+            ├── Controller/
+            │   └── EmpleadosController.php   # Controlador del módulo
+            ├── Model/
+            │   └── EmpleadosModel.php        # Consultas del módulo
+            └── View/
+                └── EmpleadosView.php         # Vista del módulo empleados
+
+```
+
+---
 
 ## Requisitos de instalación
 
@@ -57,16 +61,17 @@ Directory structure:
 
 1-Apache y gestor **mysql** (preferiblemente xampp o wamp)
 
-
-
 ## Proceso de instalación
 
 1. Coloca la carpeta dentro del proyecto raiz de tu servidor local
-``
+   ``
+
 ### Xampp
+
 C:\xampp\htdocs\
 
-### Wampp 
+### Wampp
+
 C:\wamp64\www\
 ``
 
@@ -78,7 +83,7 @@ Abre tu navegador y entra a la siguiente url " http://localhost/phpmyadmin
 
 4. Asegurarse de que el nombre de la base de datos sea la correcta, el nombre la encuentras en la ruta App/Config/Config.php
 
-``` PHP
+```PHP
 
 define("DB_NAME","empleados"); # Nombre de la base de datos.
 define("DB_PASSWORD", "");
@@ -94,4 +99,3 @@ define("DB_HOST", "localhost");
 7. Abre tu navegador e ingresa a http://localhost/
 
 8. Seleccione la carpeta "moduloGestorEmpleados"
-
