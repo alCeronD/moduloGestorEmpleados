@@ -1,5 +1,5 @@
 import { getData, sendData } from "./cases/fetch.js";
-import {  validateEmail, validateNombre } from "./cases/regex.js";
+import { validateEmail, validateNombre } from "./cases/regex.js";
 import { validateData } from "./cases/utils.js";
 
 // Variable global para guardar los datos de los usuarios y poder re utilizarlos en caso de ser necesario.
@@ -22,18 +22,19 @@ const areasCrear = document.querySelector('#modalCrear .roles');
 const rolesCrear = document.querySelector('#modalCrear .roles');
 const areasEditar = document.querySelector('#modalEditar .roles');
 
+console.log('hello world');
 
 
 // Checkbox de los roles del modal de edición.
 // Objeto del formulario editar para validar que elementos son obligatorios y cuales no.
 const inputsFormEdit = {
-    nombre: "Nombre Completo",
-    email: "Correo Electrónico",
-    genero: "Sexo",
-    area_id: "Área",
-    descripcion: "Descripción",
-    boletin: "Boletín Informativo",
-    roles: "Roles"
+  nombre: "Nombre Completo",
+  email: "Correo Electrónico",
+  genero: "Sexo",
+  area_id: "Área",
+  descripcion: "Descripción",
+  boletin: "Boletín Informativo",
+  roles: "Roles"
 };
 
 const renderEmpleados = (getUsers = {}) => {
@@ -133,47 +134,47 @@ const renderRoles = (getRoles = {}, selector) => {
 };
 
 let rolesAgregados = [];
-const addRol = (idRol, isAdd = false)=>{
-    if (!idRol) {
-        return;
+const addRol = (idRol, isAdd = false) => {
+  if (!idRol) {
+    return;
+  }
+  if (isAdd) {
+    // Evitar duplicado
+    if (!rolesAgregados.includes(idRol)) {
+      rolesAgregados.push(idRol);
+
     }
-    if (isAdd) {
-        // Evitar duplicado
-        if (!rolesAgregados.includes(idRol)) {
-            rolesAgregados.push(idRol);
-            
-        }
-    }else{
-        // Aplicar filter.
-        rolesAgregados = rolesAgregados.filter((rl)=> idRol != rl);
-    }
+  } else {
+    // Aplicar filter.
+    rolesAgregados = rolesAgregados.filter((rl) => idRol != rl);
+  }
 
 
 }
 
-// Abrir modal 
-btnCrearEmpleado.addEventListener("click",  (f) => {
+// Abrir modal
+btnCrearEmpleado.addEventListener("click", (f) => {
   f.stopPropagation();
   f.preventDefault();
   modalCrear.style.display = "flex";
   renderRoles(getRoles, "#modalCrear .roles");
   renderAreas(getAreas, "#modalCrear #inputAreaId");
 
-  
-const checkBoxCrear = document.querySelectorAll('#modalCrear .checkboxClass');
-console.log(checkBoxCrear);
-// Evento del checkbox del formulario crear
-checkBoxCrear.forEach((e)=>{
-  e.addEventListener('change', (f)=>{
-    f.stopPropagation();
-    console.log(f.target);
-    if (f.target.checked) {
-      addRol(f.target.value, true);
-    }else{
-      addRol(f.target.value, false);
-    }
+
+  const checkBoxCrear = document.querySelectorAll('#modalCrear .checkboxClass');
+  console.log(checkBoxCrear);
+  // Evento del checkbox del formulario crear
+  checkBoxCrear.forEach((e) => {
+    e.addEventListener('change', (f) => {
+      f.stopPropagation();
+      console.log(f.target);
+      if (f.target.checked) {
+        addRol(f.target.value, true);
+      } else {
+        addRol(f.target.value, false);
+      }
+    });
   });
-});
 
 
 });
@@ -192,7 +193,7 @@ closeBtnCrear.addEventListener("click", (e) => {
 closeBtnEditar.addEventListener("click", (e) => {
   e.stopPropagation();
   modalEditar.style.display = "none";
-//   Limpio el arreglo cada vez que se cierre el modal.
+  //   Limpio el arreglo cada vez que se cierre el modal.
   rolesAgregados.length = 0;
 });
 
@@ -268,7 +269,7 @@ tbodyEmpleados.addEventListener("click", (event) => {
     inputEmail.value = dataEmpleado.email;
     inputDescripcion.value = dataEmpleado.descripcion;
     idEmpleado.value = dataEmpleado.idEmpleado;
-    
+
 
     // mostrar modal
     modalEditar.style.display = "flex";
@@ -276,48 +277,48 @@ tbodyEmpleados.addEventListener("click", (event) => {
 });
 
 // Envio de formulario update
-modalFormEdit.addEventListener('submit',async  (e) => {
-    e.preventDefault();
+modalFormEdit.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    const dataForm = new FormData(modalFormEdit);
-    let data = Object.fromEntries(dataForm.entries());
-    // validar que se haya seleccionado una opción de los roles.
-    if (rolesAgregados.length === 0) {
-        alert('El rol debe ser obligatorio');
-        return;
-    }
+  const dataForm = new FormData(modalFormEdit);
+  let data = Object.fromEntries(dataForm.entries());
+  // validar que se haya seleccionado una opción de los roles.
+  if (rolesAgregados.length === 0) {
+    alert('El rol debe ser obligatorio');
+    return;
+  }
 
-    if(!validateData(dataForm,"boletin",inputsFormEdit)) return;
+  if (!validateData(dataForm, "boletin", inputsFormEdit)) return;
 
-    if (!validateNombre(data.nombre)) {
-        alert('Valor digitado del nombre incorrecto');
-        return;
-    }
+  if (!validateNombre(data.nombre)) {
+    alert('Valor digitado del nombre incorrecto');
+    return;
+  }
 
-    if (!validateEmail(data.email)) {
-        alert('Correo digitado incorrectamente');
-        return;
-    }
-    data = {
-        ...data,
-        rolesAgregados
-    };
-    const responseData = await sendData("App/Modules/Empleados/Controller/EmpleadosController.php","POST",'updateEmpleado', data);
+  if (!validateEmail(data.email)) {
+    alert('Correo digitado incorrectamente');
+    return;
+  }
+  data = {
+    ...data,
+    rolesAgregados
+  };
+  const responseData = await sendData("App/Modules/Empleados/Controller/EmpleadosController.php", "POST", 'updateEmpleado', data);
 
-    if (!responseData.status) {
-        alert(responseData.message);
-        return;
-    }
+  if (!responseData.status) {
+    alert(responseData.message);
+    return;
+  }
 
-    alert(responseData.message)
-    getUsers = await getData(
+  alert(responseData.message)
+  getUsers = await getData(
     "App/Modules/Empleados/Controller/EmpleadosController.php",
     "GET",
     { action: "getEmpleados" }
-    );
-    renderEmpleados(getUsers);
-    modalEditar.style.display = "none";
-    rolesAgregados.length = 0;
+  );
+  renderEmpleados(getUsers);
+  modalEditar.style.display = "none";
+  rolesAgregados.length = 0;
 
 });
 
@@ -333,13 +334,13 @@ const camposFormulario = {
 
 };
 
-modalFormCrear.addEventListener('submit', async (g)=>{
+modalFormCrear.addEventListener('submit', async (g) => {
   g.preventDefault();
   g.stopPropagation();
   let dataSubmit = new FormData(g.target);
   let data = Object.fromEntries(dataSubmit);
 
-  if(!validateData(dataSubmit,"boletin",camposFormulario)) return;
+  if (!validateData(dataSubmit, "boletin", camposFormulario)) return;
 
   // Validar si se selecciono el genero.
   const generoSeleccionado = document.querySelector('input[name="genero"]:checked');
@@ -373,7 +374,7 @@ modalFormCrear.addEventListener('submit', async (g)=>{
 
   const responseAdd = await sendData("App/Modules/Empleados/Controller/EmpleadosController.php", "POST", 'addEmpleado', data);
 
-  if(!responseAdd.status) {
+  if (!responseAdd.status) {
     alert(responseAdd.message);
     return;
   }
@@ -399,13 +400,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     { action: "getEmpleados" }
   );
   renderEmpleados(getUsers);
-   getAreas = await getData(
+  getAreas = await getData(
     "App/Modules/Empleados/Controller/EmpleadosController.php",
     "GET",
     { action: "getAreas" }
   );
   // renderAreas(getAreas);
-   getRoles = await getData(
+  getRoles = await getData(
     "App/Modules/Empleados/Controller/EmpleadosController.php",
     "GET",
     { action: "getRoles" }
