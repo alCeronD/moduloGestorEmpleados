@@ -1,4 +1,4 @@
-<?php 
+<?php
 class NoDataException extends Exception{}
 
 require_once __DIR__ . '/../../../helpers/Regex.php';
@@ -13,7 +13,7 @@ class EmpleadosController{
     // Objeto mysqli que representa el resultado de getConnect.
     private mysqli $conn;
     private Response $response;
-    
+
     private Regex $regex;
 
     private EmpleadosModel $empleadosModel;
@@ -36,7 +36,7 @@ class EmpleadosController{
     }
 
     /**
-     * Summary of renderView - Renderizar vista 
+     * Summary of renderView - Renderizar vista
      * @return void
      */
     public function renderView(){
@@ -57,7 +57,7 @@ class EmpleadosController{
         $this->instanceConn->closeConnect();
         if (!$dataAreas['status']) {
             $this->response::success($dataAreas, 500);
-            
+
         }
         $this->response::success($dataAreas,200);
     }
@@ -67,7 +67,7 @@ class EmpleadosController{
         $this->instanceConn->closeConnect();
         if (!$dataRoles['status']) {
             $this->response::success($dataRoles, 500);
-                    
+
             }
         $this->response::success($dataRoles,200);
     }
@@ -105,7 +105,7 @@ class EmpleadosController{
             $dataResult = $this->empleadosModel->addEmpleado($dataEmpleado);
             $this->instanceConn->closeConnect();
 
-            // // 201 = Recurso creado correctamente.
+            // 201 = Recurso creado correctamente.
             $this->response::success($dataResult, 201);
 
         } catch (NoDataException $th) {
@@ -114,7 +114,7 @@ class EmpleadosController{
                 'message'=> $th->getMessage()
             ];
             // Codigo 422 = Los datos no cumplen con las reglas esperadas para continuar con el proceso.
-           $this->response::success($result, 422);
+            $this->response::success($result, 422);
         }
     }
 
@@ -127,8 +127,8 @@ class EmpleadosController{
      */
     public function executeUpdateEmpleado(array $data =[]){
         try {
-            
-            if (count($data) === 0) throw new NoDataException("No hay datos para continuar con el proceso", 1);  
+
+            if (count($data) === 0) throw new NoDataException("No hay datos para continuar con el proceso", 1);
             $roles = $data['rolesAgregados'];
 
             if (count($roles) === 0) throw new NoDataException("El rol del empleado debe ser obligatorio", 1);
@@ -138,7 +138,7 @@ class EmpleadosController{
             if(empty($data['descripcion'])) throw new NoDataException("La descripción es obligatoria");
             if(empty($data['area_id'])) throw new NoDataException("El area del empleado es obligatoria");
             if(empty($data['genero'])) throw new NoDataException("El genero del empleado es obligatorio");
-            
+
 
             $data['boletin'] = empty($data['boletin']) ? 0 : 1;
             $data['area_id'] = (int) $data['area_id'];
@@ -177,7 +177,7 @@ class EmpleadosController{
 $obj = new EmpleadosController();
 // Recibe la data desde la petición javascript.
 if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
